@@ -5,34 +5,91 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader } from '@/components
 import { Input } from '@/components/ui/input';
 import type { FileListItem as FileListItemModel } from '@/models';
 import { getFileList } from '@/service/api';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
 import { toast } from 'vue-sonner'
+const route = useRoute()
+const router = useRouter()
 const path = ref("")
 const list = ref<FileListItemModel[]>([])
 const isLoading = ref(false)
+let requestId = 0
 
-function getList() {
+function normalizePath(value: string) {
+    return value.replace(/^\/+|\/+$/g, "")
+}
+
+function getPathFromRoute(currentRoute: RouteLocationNormalizedLoaded) {
+    const pathMatch = currentRoute.params.pathMatch
+
+    if (Array.isArray(pathMatch)) {
+        return normalizePath(pathMatch.join("/"))
+    }
+
+    if (typeof pathMatch === "string") {
+        return normalizePath(pathMatch)
+    }
+
+    return ""
+}
+
+function getRoutePath(value: string) {
+    const normalizedPath = normalizePath(value)
+
+    if (!normalizedPath) {
+        return "/"
+    }
+
+    return `/${normalizedPath.split("/").map(encodeURIComponent).join("/")}`
+}
+
+function goToPath(value: string) {
+    const normalizedPath = normalizePath(value)
+
+    if (getPathFromRoute(route) === normalizedPath) {
+        path.value = normalizedPath
+        getList(normalizedPath)
+        return
+    }
+
+    router.push(getRoutePath(normalizedPath))
+}
+
+function getList(targetPath = path.value) {
+    const currentRequestId = ++requestId
     isLoading.value = true
-    getFileList(path.value)
+    getFileList(targetPath)
         .then(response => {
+            if (currentRequestId !== requestId) {
+                return
+            }
+
             list.value = response.data
-            toast.success("success")
         })
         .catch(err => {
+            if (currentRequestId !== requestId) {
+                return
+            }
+
             toast.error(err.message)
         })
         .finally(() => {
+            if (currentRequestId !== requestId) {
+                return
+            }
+
             isLoading.value = false
         })
 }
 
 function openItem(item: FileListItemModel) {
     if (item.itemType === "folder") {
-        path.value = [path.value, item.name]
+        const nextPath = [path.value, item.name]
             .filter(Boolean)
             .join("/")
             .replace(/^\/+|\/+$/g, "")
-        getList()
+
+        goToPath(nextPath)
     }
 }
 
@@ -43,6 +100,16 @@ function downloadItem(item: FileListItemModel) {
 
     window.open(item.downloadUrl, "_blank")
 }
+
+watch(
+    () => route.fullPath,
+    () => {
+        const routePath = getPathFromRoute(route)
+        path.value = routePath
+        getList(routePath)
+    },
+    { immediate: true },
+)
 </script>
 <template>
     <div class="w-full box-border h-dvh flex justify-center relative px-4">
@@ -67,8 +134,8 @@ function downloadItem(item: FileListItemModel) {
             <main class="w-full h-full pt-16 overflow-y-auto scrollbar-hide">
                 <div class="flex w-full min-h-full flex-col gap-4 pt-4">
                     <div class="flex gap-2 items-center">
-                        <Input type="text" placeholder="Path" v-model="path" @keydown.enter="getList" />
-                        <Button size="sm" class="shrink-0" :disabled="isLoading" @click="getList">
+                        <Input type="text" placeholder="Path" v-model="path" @keydown.enter="goToPath(path)" />
+                        <Button size="sm" class="shrink-0" :disabled="isLoading" @click="goToPath(path)">
                             {{ isLoading ? "Loading" : "Fetch" }}
                         </Button>
                     </div>
