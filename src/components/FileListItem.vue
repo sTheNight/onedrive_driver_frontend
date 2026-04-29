@@ -92,18 +92,11 @@ function handleDownload() {
 </script>
 
 <template>
-    <div
-        class="group grid min-h-16 w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b px-2 py-2 transition-colors hover:bg-muted/50"
-        role="button"
-        tabindex="0"
-        @click="handleOpen"
-        @keydown.enter.prevent="handleOpen"
-        @keydown.space.prevent="handleOpen"
-    >
-        <div
-            class="flex size-10 shrink-0 items-center justify-center rounded-md border bg-background text-muted-foreground"
-            :class="{ 'text-sky-600': item.itemType === 'folder' }"
-        >
+    <div class="group grid min-h-16 w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b px-2 py-2 transition-colors hover:bg-muted/50 select-none"
+        role="button" tabindex="0" @click="handleOpen" @keydown.enter.prevent="handleOpen"
+        @keydown.space.prevent="handleOpen">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md border bg-background text-muted-foreground"
+            :class="{ 'text-sky-600': item.itemType === 'folder' }">
             <component :is="icon" class="size-5" />
         </div>
 
@@ -118,16 +111,9 @@ function handleDownload() {
             </div>
         </div>
 
-        <Button
-            v-if="canDownload"
-            type="button"
-            variant="ghost"
-            size="icon"
-            class="opacity-70 transition-opacity group-hover:opacity-100"
-            title="Download"
-            aria-label="Download"
-            @click.stop="handleDownload"
-        >
+        <Button v-if="canDownload" type="button" variant="ghost" size="icon"
+            class="opacity-70 transition-opacity group-hover:opacity-100" title="Download" aria-label="Download"
+            @click.stop="handleDownload">
             <Download class="size-4" />
         </Button>
     </div>

@@ -1,19 +1,47 @@
 <script setup lang="ts">
 import FileListItem from '@/components/FileListItem.vue';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import type { FileListItem as FileListItemModel } from '@/models';
 import { getFileList } from '@/service/api';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
 import { toast } from 'vue-sonner'
+import { Home, RefreshCw } from 'lucide-vue-next';
 const route = useRoute()
 const router = useRouter()
 const path = ref("")
 const list = ref<FileListItemModel[]>([])
 const isLoading = ref(false)
+const pendingDownloadItem = ref<FileListItemModel | null>(null)
+const isDownloadDialogOpen = ref(false)
 let requestId = 0
+
+const pathSegments = computed(() => {
+    const segments = path.value.split("/").filter(Boolean)
+
+    return segments.map((name, index) => ({
+        name,
+        path: segments.slice(0, index + 1).join("/"),
+    }))
+})
 
 function normalizePath(value: string) {
     return value.replace(/^\/+|\/+$/g, "")
@@ -47,12 +75,25 @@ function goToPath(value: string) {
     const normalizedPath = normalizePath(value)
 
     if (getPathFromRoute(route) === normalizedPath) {
-        path.value = normalizedPath
-        getList(normalizedPath)
         return
     }
 
     router.push(getRoutePath(normalizedPath))
+}
+
+function scrollBreadcrumb(event: WheelEvent) {
+    const element = event.currentTarget
+
+    if (!(element instanceof HTMLElement) || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        return
+    }
+
+    if (element.scrollWidth <= element.clientWidth) {
+        return
+    }
+
+    event.preventDefault()
+    element.scrollLeft += event.deltaY
 }
 
 function getList(targetPath = path.value) {
@@ -90,6 +131,9 @@ function openItem(item: FileListItemModel) {
             .replace(/^\/+|\/+$/g, "")
 
         goToPath(nextPath)
+    } else if (item.itemType === "file") {
+        pendingDownloadItem.value = item
+        isDownloadDialogOpen.value = true
     }
 }
 
@@ -99,6 +143,20 @@ function downloadItem(item: FileListItemModel) {
     }
 
     window.open(item.downloadUrl, "_blank")
+}
+
+function confirmDownload() {
+    if (!pendingDownloadItem.value) {
+        return
+    }
+
+    downloadItem(pendingDownloadItem.value)
+    isDownloadDialogOpen.value = false
+    pendingDownloadItem.value = null
+}
+
+function openLink(url: string) {
+    window.open(url)
 }
 
 watch(
@@ -123,7 +181,14 @@ watch(
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                About
+                                <DialogTitle>About</DialogTitle>
+                                <DialogDescription>
+                                    This project is developed by
+                                    <Button variant="link"
+                                        @click="openLink('https://github.com/sTheNight')">重鉻酸鈉</Button>
+                                    and is open-source
+                                    under the AGPL 3.0 license.
+                                </DialogDescription>
                             </DialogHeader>
                         </DialogContent>
                     </Dialog>
@@ -134,23 +199,93 @@ watch(
             <main class="w-full h-full pt-16 overflow-y-auto scrollbar-hide">
                 <div class="flex w-full min-h-full flex-col gap-4 pt-4">
                     <div class="flex gap-2 items-center">
-                        <Input type="text" placeholder="Path" v-model="path" @keydown.enter="goToPath(path)" />
-                        <Button size="sm" class="shrink-0" :disabled="isLoading" @click="goToPath(path)">
-                            {{ isLoading ? "Loading" : "Fetch" }}
+                        <div class="min-w-0 flex-1 overflow-hidden rounded-md border bg-background px-3 py-2">
+                            <Breadcrumb class="min-w-0 select-none">
+                                <BreadcrumbList
+                                    class="w-full flex-nowrap overflow-x-auto whitespace-nowrap break-normal scrollbar-hide"
+                                    @wheel="scrollBreadcrumb">
+                                    <BreadcrumbItem class="shrink-0">
+                                        <BreadcrumbPage v-if="pathSegments.length === 0"
+                                            class="inline-flex items-center gap-1.5">
+                                            <Home class="size-4" />
+                                            Root
+                                        </BreadcrumbPage>
+                                        <BreadcrumbLink v-else as="button" type="button"
+                                            class="inline-flex items-center gap-1.5" @click="goToPath('')">
+                                            <Home class="size-4" />
+                                            Root
+                                        </BreadcrumbLink>
+                                    </BreadcrumbItem>
+
+                                    <template v-for="(segment, index) in pathSegments" :key="segment.path">
+                                        <BreadcrumbSeparator class="shrink-0" />
+                                        <BreadcrumbItem class="shrink-0">
+                                            <BreadcrumbPage v-if="index === pathSegments.length - 1"
+                                                class="max-w-40 truncate sm:max-w-64" :title="segment.name">
+                                                {{ segment.name }}
+                                            </BreadcrumbPage>
+                                            <BreadcrumbLink v-else as="button" type="button"
+                                                class="max-w-40 truncate sm:max-w-64" :title="segment.name"
+                                                @click="goToPath(segment.path)">
+                                                {{ segment.name }}
+                                            </BreadcrumbLink>
+                                        </BreadcrumbItem>
+                                    </template>
+                                </BreadcrumbList>
+                            </Breadcrumb>
+                        </div>
+                        <Button size="icon-sm" variant="ghost" class="shrink-0" :disabled="isLoading" title="Refresh"
+                            aria-label="Refresh" @click="goToPath(path)">
+                            <RefreshCw :class="['size-4', isLoading ? 'animate-spin' : '']" />
                         </Button>
                     </div>
 
-                    <div class="w-full overflow-hidden rounded-md border">
+                    <div class="relative min-h-16 w-full overflow-hidden rounded-md border select-none">
                         <FileListItem v-for="item in list" :key="item.id" :item="item" @open="openItem"
                             @download="downloadItem" />
-
-                        <div v-if="!isLoading && list.length === 0"
-                            class="px-4 py-10 text-center text-sm text-muted-foreground">
-                            No files
+                        <div v-if="!isLoading && list.length == 0"
+                            class="w-full min-h-16 flex justify-center items-center">
+                            No items
                         </div>
+                        <Transition name="state-fade" mode="out-in">
+                            <div v-if="isLoading"
+                                class="absolute inset-0 flex items-center justify-center bg-gray-500/10 backdrop-blur-xs">
+                                Loading...
+                            </div>
+                        </Transition>
                     </div>
                 </div>
             </main>
         </div>
+
+        <Dialog v-model:open="isDownloadDialogOpen">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Download file</DialogTitle>
+                    <DialogDescription>
+                        Are you want to download?
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <DialogClose as-child>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button :disabled="!pendingDownloadItem?.downloadUrl" @click="confirmDownload">
+                        Download
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>
+<style lang="css" scoped>
+.state-fade-enter-active,
+.state-fade-leave-active {
+    transition: opacity .15s;
+}
+
+.state-fade-enter-from,
+.state-fade-leave-to {
+    opacity: 0;
+}
+</style>

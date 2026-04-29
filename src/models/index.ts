@@ -11,4 +11,4 @@ export interface FileListItem {
     downloadUrl?: string;
 }
 
-type FileListItemType = "file" | "folder";
+export type FileListItemType = "file" | "folder";
