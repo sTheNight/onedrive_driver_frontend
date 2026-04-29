@@ -71,10 +71,10 @@ function getRoutePath(value: string) {
     return `/${normalizedPath.split("/").map(encodeURIComponent).join("/")}`
 }
 
-function goToPath(value: string) {
+function goToPath(value: string, force: boolean = false) {
     const normalizedPath = normalizePath(value)
 
-    if (getPathFromRoute(route) === normalizedPath) {
+    if (getPathFromRoute(route) === normalizedPath && !force) {
         return
     }
 
@@ -235,7 +235,7 @@ watch(
                             </Breadcrumb>
                         </div>
                         <Button size="icon-sm" variant="ghost" class="shrink-0" :disabled="isLoading" title="Refresh"
-                            aria-label="Refresh" @click="goToPath(path)">
+                            aria-label="Refresh" @click="goToPath(path, true)">
                             <RefreshCw :class="['size-4', isLoading ? 'animate-spin' : '']" />
                         </Button>
                     </div>
