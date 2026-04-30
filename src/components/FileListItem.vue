@@ -1,17 +1,8 @@
 <script setup lang="ts">
 import type { FileListItem as FileListItemModel } from "@/models";
 import { Button } from "@/components/ui/button";
-import {
-    Download,
-    File,
-    FileArchive,
-    FileAudio,
-    FileCode,
-    FileImage,
-    FileText,
-    FileVideo,
-    Folder,
-} from "lucide-vue-next";
+import { getFileIcon } from "@/lib/fileIcon";
+import { Download } from "lucide-vue-next";
 import { computed } from "vue";
 
 const props = defineProps<{
@@ -24,23 +15,8 @@ const emit = defineEmits<{
     download: [item: FileListItemModel];
 }>();
 
-const icon = computed(() => {
-    if (props.item.itemType === "folder") {
-        return Folder;
-    }
-
-    const mimeType = props.item.mimeType ?? "";
-    if (mimeType.startsWith("image/")) return FileImage;
-    if (mimeType.startsWith("video/")) return FileVideo;
-    if (mimeType.startsWith("audio/")) return FileAudio;
-    if (mimeType.includes("zip") || mimeType.includes("compressed") || mimeType.includes("archive")) return FileArchive;
-    if (mimeType.includes("json") || mimeType.includes("javascript") || mimeType.includes("typescript") || mimeType.includes("xml")) {
-        return FileCode;
-    }
-    if (mimeType.startsWith("text/") || mimeType.includes("pdf") || mimeType.includes("document")) return FileText;
-
-    return File;
-});
+const canDownload = computed(() => props.item.itemType === "file" && Boolean(props.item.downloadUrl));
+const icon = computed(() => getFileIcon(props.item));
 
 const itemMeta = computed(() => {
     if (props.item.itemType === "folder") {
@@ -69,7 +45,6 @@ const lastModified = computed(() => {
     }).format(date);
 });
 
-const canDownload = computed(() => props.item.itemType === "file" && Boolean(props.item.downloadUrl));
 
 function formatFileSize(size: number) {
     if (!Number.isFinite(size) || size <= 0) {
@@ -94,9 +69,8 @@ function handleDownload() {
 
 <template>
     <div class="group grid min-h-16 w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 px-2 py-2 transition-colors hover:bg-muted/50 select-none"
-        :class="{ 'border-b': !isLast }"
-        role="button" tabindex="0" @click="handleOpen" @keydown.enter.prevent="handleOpen"
-        @keydown.space.prevent="handleOpen">
+        :class="{ 'border-b': !isLast }" role="button" tabindex="0" @click="handleOpen"
+        @keydown.enter.prevent="handleOpen" @keydown.space.prevent="handleOpen">
         <div class="flex size-10 shrink-0 items-center justify-center rounded-md border bg-background text-muted-foreground"
             :class="{ 'text-sky-600': item.itemType === 'folder' }">
             <component :is="icon" class="size-5" />

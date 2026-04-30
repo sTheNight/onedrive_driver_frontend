@@ -17,14 +17,14 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import type { FileListItem as FileListItemModel } from '@/models';
 import { getFileList } from '@/service/api';
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
 import { toast } from 'vue-sonner'
-import { Home, RefreshCw } from 'lucide-vue-next';
+import { Home, MoreVertical, RefreshCw } from 'lucide-vue-next';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 const route = useRoute()
 const router = useRouter()
 const path = ref("")
@@ -32,6 +32,7 @@ const list = ref<FileListItemModel[]>([])
 const isLoading = ref(false)
 const pendingDownloadItem = ref<FileListItemModel | null>(null)
 const isDownloadDialogOpen = ref(false)
+const isABoutDialogOpen = ref(false)
 let requestId = 0
 
 const pathSegments = computed(() => {
@@ -122,7 +123,6 @@ function getList(targetPath = path.value) {
             isLoading.value = false
         })
 }
-
 function openItem(item: FileListItemModel) {
     if (item.itemType === "folder") {
         const nextPath = [path.value, item.name]
@@ -175,23 +175,31 @@ watch(
             <div class="mx-auto h-full w-full max-w-2xl flex items-center justify-between border-b">
                 <h2 class="m-0 p-0">OneDrive Driver</h2>
                 <div class="flex gap-1 box-border">
-                    <Dialog>
-                        <DialogTrigger as-child>
-                            <Button variant="ghost">About</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>About</DialogTitle>
-                                <DialogDescription>
-                                    This project is developed by
-                                    <Button variant="link"
-                                        @click="openLink('https://github.com/sTheNight')">重鉻酸鈉</Button>
-                                    and is open-source
-                                    under the AGPL 3.0 license.
-                                </DialogDescription>
-                            </DialogHeader>
-                        </DialogContent>
-                    </Dialog>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="ghost">
+                                <MoreVertical />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>Github</DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                    <DropdownMenuSubContent>
+                                        <DropdownMenuItem
+                                            @click="openLink('https://github.com/sTheNight/onedrive_driver_rs')">Backend
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            @click="openLink('https://github.com/sTheNight/onedrive_driver_frontend')">
+                                            Frontend</DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                            </DropdownMenuSub>
+                            <DropdownMenuItem @click="isABoutDialogOpen = true">
+                                About
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </header>
@@ -258,12 +266,26 @@ watch(
             </main>
         </div>
 
+        <Dialog v-model:open="isABoutDialogOpen">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>About</DialogTitle>
+                    <DialogDescription>
+                        This project is developed by
+                        <Button variant="link" @click="openLink('https://github.com/sTheNight')">重鉻酸鈉</Button>
+                        and is open-source
+                        under the AGPL 3.0 license.
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+        </Dialog>
+
         <Dialog v-model:open="isDownloadDialogOpen">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Download file</DialogTitle>
+                    <DialogTitle>{{ pendingDownloadItem?.name }}</DialogTitle>
                     <DialogDescription>
-                        Are you want to download?
+                        Do you want to download this file?
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
