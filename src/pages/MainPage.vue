@@ -257,7 +257,7 @@ watch(
                         </div>
                         <Transition name="state-fade" mode="out-in">
                             <div v-if="isLoading"
-                                class="absolute inset-0 flex items-center justify-center bg-gray-500/10 backdrop-blur-xs">
+                                class="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-xs">
                                 Loading...
                             </div>
                         </Transition>
