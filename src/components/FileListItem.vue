@@ -16,6 +16,7 @@ import { computed } from "vue";
 
 const props = defineProps<{
     item: FileListItemModel;
+    isLast?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -92,7 +93,8 @@ function handleDownload() {
 </script>
 
 <template>
-    <div class="group grid min-h-16 w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b px-2 py-2 transition-colors hover:bg-muted/50 select-none"
+    <div class="group grid min-h-16 w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 px-2 py-2 transition-colors hover:bg-muted/50 select-none"
+        :class="{ 'border-b': !isLast }"
         role="button" tabindex="0" @click="handleOpen" @keydown.enter.prevent="handleOpen"
         @keydown.space.prevent="handleOpen">
         <div class="flex size-10 shrink-0 items-center justify-center rounded-md border bg-background text-muted-foreground"

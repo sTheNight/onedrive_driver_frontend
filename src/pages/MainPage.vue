@@ -71,10 +71,10 @@ function getRoutePath(value: string) {
     return `/${normalizedPath.split("/").map(encodeURIComponent).join("/")}`
 }
 
-function goToPath(value: string, force: boolean = false) {
+function goToPath(value: string) {
     const normalizedPath = normalizePath(value)
-
-    if (getPathFromRoute(route) === normalizedPath && !force) {
+    if (getPathFromRoute(route) === normalizedPath) {
+        console.log("return")
         return
     }
 
@@ -235,14 +235,14 @@ watch(
                             </Breadcrumb>
                         </div>
                         <Button size="icon-sm" variant="ghost" class="shrink-0" :disabled="isLoading" title="Refresh"
-                            aria-label="Refresh" @click="goToPath(path, true)">
+                            aria-label="Refresh" @click="() => getList()">
                             <RefreshCw :class="['size-4', isLoading ? 'animate-spin' : '']" />
                         </Button>
                     </div>
 
                     <div class="relative min-h-16 w-full overflow-hidden rounded-md border select-none">
-                        <FileListItem v-for="item in list" :key="item.id" :item="item" @open="openItem"
-                            @download="downloadItem" />
+                        <FileListItem v-for="(item, index) in list" :key="item.id" :item="item"
+                            :is-last="index === list.length - 1" @open="openItem" @download="downloadItem" />
                         <div v-if="!isLoading && list.length == 0"
                             class="w-full min-h-16 flex justify-center items-center">
                             No items
