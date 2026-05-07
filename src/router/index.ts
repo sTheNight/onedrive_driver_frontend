@@ -1,6 +1,4 @@
 import MainLayout from '@/layouts/MainLayout.vue'
-import AdminPage from '@/pages/AdminPage.vue'
-import MainPage from '@/pages/MainPage.vue'
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
@@ -10,15 +8,15 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        component: MainPage
+        component: import("@/pages/MainPage.vue")
       },
       {
         path: 'admin',
-        component: AdminPage
+        component: import("@/pages/AdminPage.vue")
       },
       {
         path: ':pathMatch(.*)*',
-        component: MainPage
+        component: import("@/pages/MainPage.vue")
       }
     ]
   },
