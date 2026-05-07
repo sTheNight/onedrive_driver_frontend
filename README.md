@@ -2,7 +2,7 @@
 
 这是 [这个东西](https://github.com/sTheNight/onedrive_driver_rs) 的配套前端
 
-处于半成品阶段
+处于半成品~~💩~~阶段
 
 ## Project Setup
 

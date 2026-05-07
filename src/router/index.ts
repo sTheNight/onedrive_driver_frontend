@@ -1,12 +1,27 @@
+import MainLayout from '@/layouts/MainLayout.vue'
+import AdminPage from '@/pages/AdminPage.vue'
 import MainPage from '@/pages/MainPage.vue'
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
   {
-    path: '/:pathMatch(.*)*',
-    name: "home",
-    component: MainPage
-  }
+    path: "/",
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        component: MainPage
+      },
+      {
+        path: 'admin',
+        component: AdminPage
+      },
+      {
+        path: ':pathMatch(.*)*',
+        component: MainPage
+      }
+    ]
+  },
 ]
 
 const router = createRouter({
