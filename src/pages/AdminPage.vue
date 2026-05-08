@@ -4,12 +4,16 @@
  */
 import { getCurrentUser } from "@/service/admin";
 import axios from "axios";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import Input from "@/components/ui/input/Input.vue";
 import Button from "@/components/ui/button/Button.vue";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "uninitialized";
 const status = ref<AuthStatus>("loading");
+const isLoading = computed(() => status.value == "loading");
+const isAuthenticated = computed(() => status.value == "authenticated");
+const isUnAuthenticated = computed(() => status.value == "unauthenticated")
+const isUnInitialized = computed(() => status.value == "uninitialized")
 
 function fetchLoginStatus() {
     status.value = "loading";
@@ -41,10 +45,10 @@ onMounted(() => {
 <template>
     <div class="w-full h-full max-w-2xl">
         <main class="w-full h-full pt-20 overflow-y-auto scrollbar-hide text-sm">
-            <div v-if="status == 'loading'" class="w-full h-16 flex justify-center items-center">
+            <div v-if="isLoading" class="w-full h-16 flex justify-center items-center">
                 Loading...
             </div>
-            <div v-else-if="status == 'uninitialized'">
+            <div v-else-if="isUnInitialized">
                 <div class="w-full  rounded-md border p-6">
                     <div class="space-y-1">
                         <h2 class="text-base font-medium">
@@ -75,7 +79,7 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-            <div v-else-if="status == 'unauthenticated'">
+            <div v-else-if="isUnAuthenticated">
                 <div class="w-full rounded-md border p-6">
                     <div class="space-y-1">
                         <h2 class="text-base font-medium">
@@ -106,7 +110,7 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-            <div v-else>
+            <div v-else-if="isAuthenticated">
                 <div class="w-full rounded-md border p-6">
                 </div>
             </div>
