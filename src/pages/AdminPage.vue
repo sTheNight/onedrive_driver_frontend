@@ -5,8 +5,9 @@
 import { getCurrentUser } from "@/service/admin";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
-import Input from "@/components/ui/input/Input.vue";
-import Button from "@/components/ui/button/Button.vue";
+import InitAccount from "./admin/InitAccount.vue";
+import Login from "./admin/Login.vue";
+import SetOneDriveConfig from "./admin/SetOneDriveConfig.vue";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "uninitialized";
 const status = ref<AuthStatus>("loading");
@@ -48,72 +49,9 @@ onMounted(() => {
             <div v-if="isLoading" class="w-full h-16 flex justify-center items-center">
                 Loading...
             </div>
-            <div v-else-if="isUnInitialized">
-                <div class="w-full  rounded-md border p-6">
-                    <div class="space-y-1">
-                        <h2 class="text-base font-medium">
-                            初始化
-                        </h2>
-                        <p class="text-sm text-muted-foreground">
-                            创建初始管理员账户
-                        </p>
-                    </div>
-                    <div class="mt-6 space-y-4">
-                        <div class="space-y-2">
-                            <label for="account" class="text-sm font-medium leading-none">
-                                账号
-                            </label>
-                            <Input id="account" placeholder="请输入账号" />
-                        </div>
-                        <div class="space-y-2">
-                            <label for="password" class="text-sm font-medium leading-none">
-                                密码
-                            </label>
-                            <Input id="password" type="password" placeholder="请输入密码" />
-                        </div>
-                    </div>
-                    <div class="mt-6 flex justify-end">
-                        <Button>
-                            创建账户
-                        </Button>
-                    </div>
-                </div>
-            </div>
-            <div v-else-if="isUnAuthenticated">
-                <div class="w-full rounded-md border p-6">
-                    <div class="space-y-1">
-                        <h2 class="text-base font-medium">
-                            登陆
-                        </h2>
-                        <p class="text-sm text-muted-foreground">
-                            登陆管理员账户
-                        </p>
-                    </div>
-                    <div class="mt-6 space-y-4">
-                        <div class="space-y-2">
-                            <label for="account" class="text-sm font-medium leading-none">
-                                账号
-                            </label>
-                            <Input id="account" placeholder="请输入账号" />
-                        </div>
-                        <div class="space-y-2">
-                            <label for="password" class="text-sm font-medium leading-none">
-                                密码
-                            </label>
-                            <Input id="password" type="password" placeholder="请输入密码" />
-                        </div>
-                    </div>
-                    <div class="mt-6 flex justify-end">
-                        <Button>
-                            登陆
-                        </Button>
-                    </div>
-                </div>
-            </div>
-            <div v-else-if="isAuthenticated">
-                <div class="w-full rounded-md border p-6">
-                </div>
-            </div>
+            <InitAccount @refresh="fetchLoginStatus" v-else-if="isUnInitialized" />
+            <Login @refresh="fetchLoginStatus" v-else-if="isUnAuthenticated" />
+            <SetOneDriveConfig v-else-if="isAuthenticated" />
         </main>
     </div>
 </template>

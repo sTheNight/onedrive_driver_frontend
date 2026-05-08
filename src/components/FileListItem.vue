@@ -15,7 +15,7 @@ const emit = defineEmits<{
     download: [item: FileListItemModel];
 }>();
 
-const canDownload = computed(() => props.item.itemType === "file" && Boolean(props.item.downloadUrl));
+const canDownload = computed(() => props.item.itemType === "file" && props.item.downloadUrl);
 const icon = computed(() => getFileIcon(props.item));
 
 const itemMeta = computed(() => {

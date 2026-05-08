@@ -154,16 +154,15 @@ function getList(targetPath = path.value) {
         })
 }
 function openItem(item: FileListItemModel) {
-    if (item.itemType === "folder") {
+    if (item.itemType == "file" && item.downloadUrl) {
+        pendingDownloadItem.value = item
+        isDownloadDialogOpen.value = true
+    } else if (item.itemType === "folder") {
         const nextPath = [path.value, item.name]
             .filter(Boolean)
             .join("/")
             .replace(/^\/+|\/+$/g, "")
-
         goToPath(nextPath)
-    } else if (item.itemType === "file") {
-        pendingDownloadItem.value = item
-        isDownloadDialogOpen.value = true
     }
 }
 

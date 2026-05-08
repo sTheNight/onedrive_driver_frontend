@@ -10,6 +10,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { useRouter } from 'vue-router';
+const router = useRouter()
 
 function openLink(url: string) {
     window.open(url)
@@ -21,7 +23,7 @@ const isABoutDialogOpen = ref(false)
     <div class="w-full box-border h-dvh flex justify-center relative px-4">
         <header class="absolute top-0 left-0 right-0 z-10 h-16 bg-background/70 backdrop-blur-lg px-4">
             <div class="mx-auto h-full w-full max-w-2xl flex items-center justify-between border-b">
-                <h2 class="m-0 p-0">OneDrive Driver</h2>
+                <h2 class="m-0 p-0 cursor-pointer" @click="router.push('/')">OneDrive Driver</h2>
                 <div class="flex gap-1 box-border">
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
@@ -39,10 +41,14 @@ const isABoutDialogOpen = ref(false)
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             @click="openLink('https://github.com/sTheNight/onedrive_driver_frontend')">
-                                            Frontend</DropdownMenuItem>
+                                            Frontend
+                                        </DropdownMenuItem>
                                     </DropdownMenuSubContent>
                                 </DropdownMenuPortal>
                             </DropdownMenuSub>
+                            <DropdownMenuItem @click="router.push('/@admin')">
+                                Admin Panel
+                            </DropdownMenuItem>
                             <DropdownMenuItem @click="isABoutDialogOpen = true">
                                 About
                             </DropdownMenuItem>
