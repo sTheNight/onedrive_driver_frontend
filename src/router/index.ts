@@ -8,15 +8,15 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        component: import("@/pages/MainPage.vue")
+        component: () => import("@/pages/MainPage.vue")
       },
       {
         path: '@admin',
-        component: import("@/pages/AdminPage.vue")
+        component: () => import("@/pages/AdminPage.vue")
       },
       {
         path: ':pathMatch(.*)*',
-        component: import("@/pages/MainPage.vue")
+        component: () => import("@/pages/MainPage.vue")
       }
     ]
   },
