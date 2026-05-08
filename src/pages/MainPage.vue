@@ -24,14 +24,23 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
 import { toast } from 'vue-sonner'
 import { Home, RefreshCw } from 'lucide-vue-next';
+
+type FileListStatus = "idle" | "loading" | "refreshing" | "ready" | "empty" | "error"
+
 const route = useRoute()
 const router = useRouter()
 const path = ref("")
 const list = ref<FileListItemModel[]>([])
-const isLoading = ref(false)
+const fileListStatus = ref<FileListStatus>("idle")
+const fileListErrorMessage = ref("")
 const pendingDownloadItem = ref<FileListItemModel | null>(null)
 const isDownloadDialogOpen = ref(false)
 let requestId = 0
+
+const isFileListBusy = computed(() => fileListStatus.value === "loading" || fileListStatus.value === "refreshing")
+const isFileListEmpty = computed(() => fileListStatus.value === "empty")
+const isFileListUnavailable = computed(() => fileListStatus.value === "error" && list.value.length === 0)
+const fileListBusyMessage = computed(() => fileListStatus.value === "refreshing" ? "Refreshing..." : "Loading...")
 
 const pathSegments = computed(() => {
     const segments = path.value.split("/").filter(Boolean)
@@ -80,6 +89,29 @@ function goToPath(value: string) {
     router.push(getRoutePath(normalizedPath))
 }
 
+function getErrorMessage(error: any) {
+    if (
+        typeof error === "object"
+        && error !== null
+        && "response" in error
+        && typeof error.response === "object"
+        && error.response !== null
+        && "data" in error.response
+        && typeof error.response.data === "object"
+        && error.response.data !== null
+        && "message" in error.response.data
+        && typeof error.response.data.message === "string"
+    ) {
+        return error.response.data.message
+    }
+
+    if (error instanceof Error) {
+        return error.message
+    }
+
+    return "Failed to load files"
+}
+
 function scrollBreadcrumb(event: WheelEvent) {
     const element = event.currentTarget
 
@@ -97,28 +129,28 @@ function scrollBreadcrumb(event: WheelEvent) {
 
 function getList(targetPath = path.value) {
     const currentRequestId = ++requestId
-    isLoading.value = true
+    fileListStatus.value = list.value.length > 0 ? "refreshing" : "loading"
+    fileListErrorMessage.value = ""
     getFileList(targetPath)
         .then(response => {
             if (currentRequestId !== requestId) {
                 return
             }
-
             list.value = response.data
+            fileListStatus.value = response.data.length > 0 ? "ready" : "empty"
         })
         .catch(err => {
             if (currentRequestId !== requestId) {
                 return
             }
 
-            toast.error(err.message)
-        })
-        .finally(() => {
-            if (currentRequestId !== requestId) {
-                return
-            }
+            const errorMessage = getErrorMessage(err)
+            fileListErrorMessage.value = errorMessage
+            fileListStatus.value = "error"
 
-            isLoading.value = false
+            if (list.value.length > 0) {
+                toast.error(errorMessage)
+            }
         })
 }
 function openItem(item: FileListItemModel) {
@@ -151,10 +183,6 @@ function confirmDownload() {
     downloadItem(pendingDownloadItem.value)
     isDownloadDialogOpen.value = false
     pendingDownloadItem.value = null
-}
-
-function openLink(url: string) {
-    window.open(url)
 }
 
 watch(
@@ -207,22 +235,26 @@ watch(
                             </BreadcrumbList>
                         </Breadcrumb>
                     </div>
-                    <Button size="icon-sm" variant="ghost" class="shrink-0" :disabled="isLoading" title="Refresh"
+                    <Button size="icon-sm" variant="ghost" class="shrink-0" :disabled="isFileListBusy" title="Refresh"
                         aria-label="Refresh" @click="() => getList()">
-                        <RefreshCw :class="['size-4', isLoading ? 'animate-spin' : '']" />
+                        <RefreshCw :class="['size-4', isFileListBusy ? 'animate-spin' : '']" />
                     </Button>
                 </div>
 
-                <div class="relative min-h-16 w-full overflow-hidden rounded-md border select-none">
+                <div class="relative min-h-16 w-full overflow-hidden rounded-md border select-none text-sm">
                     <FileListItem v-for="(item, index) in list" :key="item.id" :item="item"
                         :is-last="index === list.length - 1" @open="openItem" @download="downloadItem" />
-                    <div v-if="!isLoading && list.length == 0" class="w-full min-h-16 flex justify-center items-center">
+                    <div v-if="isFileListEmpty" class="w-full min-h-16 flex justify-center items-center">
                         No items
                     </div>
+                    <div v-if="isFileListUnavailable"
+                        class="w-full min-h-16 flex justify-center items-center text-red-500">
+                        {{ fileListErrorMessage }}
+                    </div>
                     <Transition name="state-fade" mode="out-in">
-                        <div v-if="isLoading"
+                        <div v-if="isFileListBusy"
                             class="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-xs text-sm">
-                            Loading...
+                            {{ fileListBusyMessage }}
                         </div>
                     </Transition>
                 </div>
