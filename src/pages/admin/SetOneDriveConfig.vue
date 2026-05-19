@@ -26,8 +26,8 @@ function getConfig() {
     axios.get(`${API_URL}/admin/onedrive-config`).then(response => {
         const remoteConfig = response.data as OnedriveConfig
         onedriveConfig.value = remoteConfig
-    }).then(err => {
-
+    }).catch(err => {
+        toast.error(err.response.data.message || "Get Failed")
     })
 }
 
