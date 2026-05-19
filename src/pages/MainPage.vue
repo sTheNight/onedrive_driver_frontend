@@ -251,9 +251,11 @@ watch(
                         {{ fileListErrorMessage }}
                     </div>
                     <Transition name="state-fade" mode="out-in">
-                        <div v-if="isFileListBusy"
-                            class="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-xs text-sm">
-                            {{ fileListBusyMessage }}
+                        <div v-if="isFileListBusy" class="absolute inset-0 bg-white/20 backdrop-blur-xs text-sm">
+                            <div
+                                class="w-full box-border h-[clamp(64px,100%,256px)] shrink-0 flex items-center justify-center">
+                                {{ fileListBusyMessage }}
+                            </div>
                         </div>
                     </Transition>
                 </div>
