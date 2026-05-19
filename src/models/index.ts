@@ -11,4 +11,11 @@ export interface FileListItem {
     downloadUrl?: string;
 }
 
+export interface OnedriveConfig {
+    onedriveRootPath: string,
+    onedriveClientId: string,
+    onedriveClientSecret: string,
+    onedriveRefreshToken: string
+}
+
 export type FileListItemType = "file" | "folder";

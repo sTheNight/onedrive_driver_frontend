@@ -1,28 +1,39 @@
 <script setup lang="ts">
 import Button from "@/components/ui/button/Button.vue";
 import { Input } from "@/components/ui/input";
+import type { OnedriveConfig } from "@/models";
 import { API_URL } from "@/service/api";
 import axios from "axios";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { toast } from "vue-sonner";
 
-const rootPath = ref("")
-const clientId = ref("")
-const clientSecret = ref("")
-const refreshToken = ref("")
+const onedriveConfig = ref<OnedriveConfig>({} as OnedriveConfig);
 
 function saveConfig() {
     axios.put(`${API_URL}/admin/onedrive-config`, {
-        onedriveRootPath: rootPath.value,
-        onedriveClientId: clientId.value,
-        onedriveClientSecret: clientSecret.value,
-        onedriveRefreshToken: refreshToken.value
+        onedriveRootPath: onedriveConfig.value.onedriveRootPath,
+        onedriveClientId: onedriveConfig.value.onedriveClientId,
+        onedriveClientSecret: onedriveConfig.value.onedriveClientSecret,
+        onedriveRefreshToken: onedriveConfig.value.onedriveRefreshToken
     }).then(response => {
         toast.success("Saved")
     }).catch(err => {
         toast.error(err.response.data.message || "Save Failed")
     })
 }
+
+function getConfig() {
+    axios.get(`${API_URL}/admin/onedrive-config`).then(response => {
+        const remoteConfig = response.data as OnedriveConfig
+        onedriveConfig.value = remoteConfig
+    }).then(err => {
+
+    })
+}
+
+onMounted(() => {
+    getConfig()
+})
 
 </script>
 <template>
@@ -34,28 +45,28 @@ function saveConfig() {
         </div>
         <div class="mt-6 space-y-4">
             <div class="space-y-2">
-                <label for="username" class="text-sm font-medium leading-none">
+                <label for="root-path" class="text-sm font-medium leading-none">
                     ONEDRIVE_ROOT_PATH
                 </label>
-                <Input v-model="rootPath" id="username" />
+                <Input v-model="onedriveConfig.onedriveRootPath" id="root-path" />
             </div>
             <div class="space-y-2">
-                <label for="password" class="text-sm font-medium leading-none">
+                <label for="client-id" class="text-sm font-medium leading-none">
                     ONEDRIVE_CLIENT_ID
                 </label>
-                <Input v-model="clientId" id="password" />
+                <Input v-model="onedriveConfig.onedriveClientId" id="client-id" />
             </div>
             <div class="space-y-2">
-                <label for="password" class="text-sm font-medium leading-none">
+                <label for="client-secret" class="text-sm font-medium leading-none">
                     ONEDRIVE_CLIENT_SECRET
                 </label>
-                <Input v-model="clientSecret" id="password" />
+                <Input v-model="onedriveConfig.onedriveClientSecret" id="client-secret" />
             </div>
             <div class="space-y-2">
-                <label for="password" class="text-sm font-medium leading-none">
+                <label for="refresh-token" class="text-sm font-medium leading-none">
                     ONEDRIVE_REFRESH_TOKEN
                 </label>
-                <Input v-model="refreshToken" id="password" />
+                <Input v-model="onedriveConfig.onedriveRefreshToken" id="refresh-token" />
             </div>
         </div>
         <div class="mt-6 flex justify-end">
